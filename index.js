@@ -46,10 +46,7 @@ async function run() {
             let query = {
                 productName: { $regex: search, $options: 'i'}
             };
-            if(filter) query.band =  filter 
-
-            // let query = {};
-            // if(filter) query = { brand: filter }
+            if(filter) query.brand =  filter 
 
             let options = {};
             if(sort) options = { sort: { productCreationDate: sort === 'asc' ? 1 : -1 } }
@@ -65,8 +62,12 @@ async function run() {
         // Get products count
         app.get('/product-count', async (req, res) => {
             const filter = req.query.filter;
-            let query = {};
-            if(filter) query = { brand: filter }
+            const search = req.query.search;
+
+            let query = {
+                productName: { $regex: search, $options: 'i'}
+            };
+            if(filter) query.band =  filter 
             const count = await productCollection.countDocuments(query);
 
             res.send({count})
