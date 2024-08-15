@@ -41,11 +41,15 @@ async function run() {
             const filter = req.query.filter;
             const sort = req.query.sort;
             const sortPrice = req.query.sortPrice;
+            const search = req.query.search;
 
-            console.log(sortPrice);
+            let query = {
+                productName: { $regex: search, $options: 'i'}
+            };
+            if(filter) query.band =  filter 
 
-            let query = {};
-            if(filter) query = { brand: filter }
+            // let query = {};
+            // if(filter) query = { brand: filter }
 
             let options = {};
             if(sort) options = { sort: { productCreationDate: sort === 'asc' ? 1 : -1 } }
