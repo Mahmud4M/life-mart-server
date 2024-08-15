@@ -28,6 +28,31 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
 
+
+        const db = client.db('lifeMart');
+        const usersCollection = db.collection('usersData');
+        const productCollection = db.collection('productsData');
+
+
+        // To get productsData in url
+        app.get('/products-data', async (req, res) => {
+            const page = parseInt(req.query.page)  - 1 ;
+            const size = parseInt(req.query.size);
+            
+            const result = await productCollection.find().skip(page * size).limit(size).toArray();
+
+            res.send(result)
+        })
+
+        // Get products count
+        app.get('/product-count', async (req, res) => {
+            const count = await productCollection.countDocuments();
+
+            res.send({count})
+        })
+
+
+
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         // Send a ping to confirm a successful connection
