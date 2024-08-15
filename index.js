@@ -38,15 +38,32 @@ async function run() {
         app.get('/products-data', async (req, res) => {
             const page = parseInt(req.query.page)  - 1 ;
             const size = parseInt(req.query.size);
-            
-            const result = await productCollection.find().skip(page * size).limit(size).toArray();
+            const filter = req.query.filter;
+            const sort = req.query.sort;
+            const sortPrice = req.query.sortPrice;
+
+            console.log(sortPrice);
+
+            let query = {};
+            if(filter) query = { brand: filter }
+
+            let options = {};
+            if(sort) options = { sort: { productCreationDate: sort === 'asc' ? 1 : -1 } }
+
+            let optionsPrice = {};
+            if(sortPrice) optionsPrice = { sortPrice: { price: sortPrice === 'low' ? 1 : -1 } }
+
+            const result = await productCollection.find(query, options, optionsPrice).skip(page * size).limit(size).toArray();
 
             res.send(result)
         })
 
         // Get products count
         app.get('/product-count', async (req, res) => {
-            const count = await productCollection.countDocuments();
+            const filter = req.query.filter;
+            let query = {};
+            if(filter) query = { brand: filter }
+            const count = await productCollection.countDocuments(query);
 
             res.send({count})
         })
