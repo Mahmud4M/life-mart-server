@@ -36,28 +36,56 @@ async function run() {
 
         // To get productsData in url
         app.get('/products-data', async (req, res) => {
-            const page = parseInt(req.query.page)  - 1 ;
+            const page = parseInt(req.query.page) - 1;
             const size = parseInt(req.query.size);
+            // Sort
             const filter = req.query.filter;
             const sort = req.query.sort;
-            const sortPrice = req.query.sortPrice;
+            const price = req.query.sortPrice;
             const search = req.query.search;
+            const category = req.query.category;
 
+            // Build query object
             let query = {
-                productName: { $regex: search, $options: 'i'}
+                productName: {
+                    $regex: `${search}`,
+                    $options: 'i'
+                }
             };
-            if(filter) query.brand =  filter 
+            if (filter) query.brand = filter
+            if (category) query.category = category
 
+            // Build sort options
             let options = {};
-            if(sort) options = { sort: { productCreationDate: sort === 'asc' ? 1 : -1 } }
-
             let optionsPrice = {};
-            if(sortPrice) optionsPrice = { sortPrice: { price: sortPrice === 'low' ? 1 : -1 } }
+            if (sort) options = { sort: { productCreationDate: sort === 'asc' ? 1 : -1 } }
+            if(price) optionsPrice = { sortPrice: { price: price === 'low' ? 1 : -1 } }
 
-            const result = await productCollection.find(query, options, optionsPrice).skip(page * size).limit(size).toArray();
 
-            res.send(result)
+            try {
+                const result = await productCollection.find(query, options).skip(page * size).limit(size).toArray();
+
+                res.send(result)
+            } catch (error) {
+                console.error('Error fetching products:', error);
+                res.status(500).send([]);
+            }
         })
+
+
+        // Get products count
+        // app.get('/products', async (req, res) => {
+        //     try {
+        //         const result = await productCollection.find().toArray();
+
+        //         res.send(result)
+        //     } catch (error) {
+        //         console.error('Error fetching products:', error);
+        //         res.status(500).send([]);
+        //     }
+        // })
+
+
 
         // Get products count
         app.get('/product-count', async (req, res) => {
@@ -65,12 +93,17 @@ async function run() {
             const search = req.query.search;
 
             let query = {
-                productName: { $regex: search, $options: 'i'}
+                productName: {
+                    $regex: `${search}`,
+                    $options: 'i'
+                }
             };
-            if(filter) query.band =  filter 
+            if (filter) query.brand = filter
             const count = await productCollection.countDocuments(query);
 
-            res.send({count})
+            res.send({
+                count
+            })
         })
 
 
