@@ -101,7 +101,6 @@ async function run() {
             })
         })
 
-
         // Get User data in url
         app.get('/user-data', async (req, res) => {
             const result = await usersCollection.find().toArray();
