@@ -1,20 +1,29 @@
+require('dotenv').config();
 const express = require("express");
 const app = express();
-const port = process.env.PORT || 5000;
+const cors = require("cors");
+
 const {
     MongoClient,
     ServerApiVersion
 } = require('mongodb');
-const cors = require("cors");
 
+const port = process.env.PORT || 5000;
 
-app.use(cors({
-    origin: [
+// Middleware
+app.use(
+    cors({
+      origin: [
         "http://localhost:5173",
-    ]
-}))
+        "https://life-mart-client.web.app",
+        "https://life-mart-client.firebaseapp.com"
+      ],
+      credentials: true,
+    })
+  );
+  app.use(express.json());
 
-const uri = `mongodb+srv://lifeMart:MZu0eOgaZm21JJs0@cluster0.05txn1y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.05txn1y.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -24,6 +33,7 @@ const client = new MongoClient(uri, {
         deprecationErrors: true,
     }
 });
+
 
 async function run() {
     try {
@@ -72,21 +82,6 @@ async function run() {
             }
         })
 
-
-        // Get products count
-        // app.get('/products', async (req, res) => {
-        //     try {
-        //         const result = await productCollection.find().toArray();
-
-        //         res.send(result)
-        //     } catch (error) {
-        //         console.error('Error fetching products:', error);
-        //         res.status(500).send([]);
-        //     }
-        // })
-
-
-
         // Get products count
         app.get('/product-count', async (req, res) => {
             const filter = req.query.filter;
@@ -107,13 +102,33 @@ async function run() {
         })
 
 
+        // Get User data in url
+        app.get('/user-data', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+
+            res.send(result)
+        })
+
+        // Save User-Data in Database
+        app.post('/user-data', async ( req, res ) => {
+            const user = req.body;
+
+            const query = { user };
+            const options = { upsert: true };
+            const updateDoc = { $set: { ...user, timesstamp: Date.now() } } 
+
+            const result = await usersCollection.insertOne(query, options, updateDoc);
+            res.send(result)
+        })
+
+
 
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         // Send a ping to confirm a successful connection
-        await client.db("admin").command({
-            ping: 1
-        });
+        // await client.db("admin").command({
+        //     ping: 1
+        // });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
     } finally {
         // Ensures that the client will close when you finish/error
